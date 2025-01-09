@@ -1,6 +1,8 @@
 module github.com/akkuman/webeye
 
-go 1.22.8
+go 1.22.0
+
+toolchain go1.22.8
 
 require (
 	github.com/PuerkitoBio/goquery v1.9.3
