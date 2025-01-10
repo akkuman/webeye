@@ -104,7 +104,7 @@ type WebFingerRaw struct {
 func (wfr *WebFingerRaw) toWebFinger() (wf *WebFinger, err error) {
 	var reqData []byte
 	if len(wfr.RequestData) != 0 {
-		reqData, err = base64.RawStdEncoding.DecodeString(wfr.RequestData)
+		reqData, err = base64.StdEncoding.DecodeString(wfr.RequestData)
 		if err != nil {
 			return
 		}
