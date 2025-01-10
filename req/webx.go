@@ -55,7 +55,7 @@ func (hrd *HttpRawData) FaviconHashList() []string {
 type Options struct {
 	// 最大跟随跳转次数
 	MaxRedirects int
-	// 请求 web 的最大速率每秒
+	// 请求 web 的最大速率每秒，可以理解为 N 个请求/s
 	RateLimit int
 	// 用那个客户端请求
 	Client *req.Client
@@ -368,6 +368,7 @@ func (x *WebX) GetFav(ctx context.Context, faviconURL string) FavCacheStruct {
 			}
 		}
 	}
+	x.limiter.Take()
 	resp, err := x.client.R().SetContext(ctx).DisableAutoReadResponse().Get(faviconURL)
 	if err != nil {
 		return FavCacheStruct{Error: err}
