@@ -191,6 +191,7 @@ func (wfs *WebFingerSystem) MatchIndex(data []byte, headers http.Header, statusC
 			res.Add(NewWebFingerResult(f))
 		}
 	}
+	// favicon 匹配
 	for _, f := range wfs.Favicons {
 		if f.MatchFavicon(favicons) {
 			res.Add(NewWebFingerResult(f))
