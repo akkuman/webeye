@@ -199,3 +199,8 @@ func (wfs *WebFingerSystem) MatchIndex(data []byte, headers http.Header, statusC
 	}
 	return res.ToSlice()
 }
+
+// Count 返回所有的指纹数量
+func (wfs *WebFingerSystem) Count() int {
+	return len(wfs.Indexs) + len(wfs.CustomReqs) + len(wfs.Favicons)
+}
