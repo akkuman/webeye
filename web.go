@@ -31,7 +31,7 @@ func DoFingerAutoScheme(ctx context.Context, webxIns *req.WebX, rawURL string, w
 		fingers := mapset.NewSet[finger.WebFingerResult]()
 		for _, scheme := range []string{"https", "http"} {
 			u.Scheme = scheme
-			fingers_, err := DoFinger(ctx, webxIns, rawURL, wfs)
+			fingers_, err := DoFinger(ctx, webxIns, u.String(), wfs)
 			fingers.Append(fingers_...)
 			if err != nil {
 				return fingers.ToSlice(), err
