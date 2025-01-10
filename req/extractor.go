@@ -37,7 +37,7 @@ func ExtractRedirectURI(data string) (redirectURI string) {
 					return
 				}
 				if content, exsit := s.Attr("content"); exsit {
-					contentL := strings.Split(strings.TrimSpace(content), "=")
+					contentL := strings.SplitN(strings.TrimSpace(content), "=", 2)
 					if len(contentL) != 2 {
 						return
 					}

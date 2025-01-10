@@ -49,6 +49,40 @@ func TestExtractRedirectURI(t *testing.T) {
 			input: "<!doctype html>\n<html>\n\t<head>\n\t    <title>Loading...</title>\n\t</head>\n\t<body>\n\t\t<script type=\"text/javascript\">\n\t\t\tlocation.href = \"./ui/\";\n\t\t</script>\n\t</body>\n</html>\n",
 			want: "./ui/",
 		},
+		{
+			input: `<html>
+<head>
+        <title>TEST</title>
+       <link href="favicon.ico" rel="icon" type="image/x-icon" />
+        <meta http-equiv="X-UA-Compatible" content="chrome=1,IE=edge"/>
+<meta http-equiv="refresh" content="0;url=http://localhost:8075/WebReport/ReportServer?op=fs_load&cmd=fs_signin&_=1617601373118">
+    <style type="text/css">
+            html, body
+        {
+            margin: 0px 0px;
+            width: 100%;
+            height: 100%;
+        }
+            iframe
+        {
+            margin: 0px 0px;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    </head>
+<body>
+<script type="text/javascript">
+var myvalue = "jjjjj";
+function fun1() {
+      return "function return test";
+  }
+document.write("Hello World!");
+</script>
+</body>
+</html>`,
+			want: "http://localhost:8075/WebReport/ReportServer?op=fs_load&cmd=fs_signin&_=1617601373118",
+		},
 	}
 	for _, tc := range tests {
 		t.Run(fmt.Sprintf("ExtractRedirectURI-%s", tc.want), func(t *testing.T) {
