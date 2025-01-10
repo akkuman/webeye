@@ -73,8 +73,12 @@ func (wf *WebFinger) MatchKeyWord(data []byte, headers map[string]string, status
 	return true
 }
 
+// MatchFavicon 匹配图标指纹，如果图标或图标指纹不存在，则返回 false，只有当有值并且匹配时，才返回 true
 func (wf *WebFinger) MatchFavicon(favicons []string) bool {
 	// 匹配图标
+	if len(favicons) == 0 || len(wf.MatchRules.FaviconHash) == 0 {
+		return false
+	}
 	favicon_hash_set := mapset.NewSet(favicons...)
 	if len(wf.MatchRules.FaviconHash) > 0 {
 		// 存在 favicon 指纹的情况下，指纹中的 iconhash 没有一个匹配到，则指纹匹配失败
