@@ -207,16 +207,16 @@ func (x *WebX) doWebHTMLRequest(ctx context.Context, targetURL string, wf *finge
 	if err != nil {
 		return HttpRawDataList, err
 	}
-	http_raw_data, err := x.responseToHttpRawData(httpresp.Response, body)
+	hrd, err := x.responseToHttpRawData(httpresp.Response, body)
 	if err != nil {
-		return HttpRawDataList, err
+		return []HttpRawData{hrd}, err
 	}
 	if wf != nil {
 		// 对于自定义请求的情况，不需要进行跟随跳转，也不需要请求 favicon，直接执行自定义请求即可
-		return HttpRawDataList, nil
+		return []HttpRawData{hrd}, nil
 	}
-	http_raw_data.FaviconHash = x.getFavicon(ctx, httpresp.Response, http_raw_data.Body)
-	HttpRawDataList = append(HttpRawDataList, http_raw_data)
+	hrd.FaviconHash = x.getFavicon(ctx, httpresp.Response, hrd.Body)
+	HttpRawDataList = append(HttpRawDataList, hrd)
 	currentRedirectCount := 0
 	for {
 		// 计算跳转次数，达到最大值退出
@@ -224,16 +224,16 @@ func (x *WebX) doWebHTMLRequest(ctx context.Context, targetURL string, wf *finge
 		if currentRedirectCount > x.opt.MaxRedirects {
 			break
 		}
-		redirectURL, _ := x.getRedirectURL(http_raw_data)
+		redirectURL, _ := x.getRedirectURL(hrd)
 		if redirectURL == "" {
 			// 没有更多的跳转
 			break
 		}
-		newURL, err := http_raw_data.URL.Parse(redirectURL)
+		newURL, err := hrd.URL.Parse(redirectURL)
 		if err != nil {
 			break
 		}
-		if newURL.String() == http_raw_data.URL.String() {
+		if newURL.String() == hrd.URL.String() {
 			// 如果此次跳转和上一次跳转相同，则退出
 			break
 		}
@@ -241,12 +241,12 @@ func (x *WebX) doWebHTMLRequest(ctx context.Context, targetURL string, wf *finge
 		if err != nil {
 			return HttpRawDataList, err
 		}
-		http_raw_data, err = x.responseToHttpRawData(httpresp.Response, body)
-		http_raw_data.FaviconHash = x.getFavicon(ctx, httpresp.Response, http_raw_data.Body)
+		hrd, err = x.responseToHttpRawData(httpresp.Response, body)
+		hrd.FaviconHash = x.getFavicon(ctx, httpresp.Response, hrd.Body)
 		if err != nil {
 			break
 		}
-		HttpRawDataList = append(HttpRawDataList, http_raw_data)
+		HttpRawDataList = append(HttpRawDataList, hrd)
 	}
 	return HttpRawDataList, nil
 }
