@@ -109,18 +109,16 @@ func (x *WebX) Request(ctx context.Context, targetURL string, wf *finger.WebFing
 			return v, nil
 		}
 	}
-	httpRawDataList := make([]HttpRawData, 0)
 	// 没有中缓存就请求一次
-	hrd, err := x.doWebHTMLRequest(ctx, targetURL, wf)
+	hrds, err := x.doWebHTMLRequest(ctx, targetURL, wf)
 	if err != nil {
-		return nil, err
+		return hrds, err
 	}
-	httpRawDataList = append(httpRawDataList, hrd...)
 	//保存缓存
 	if x.cache != nil {
-		x.cache.Set(cacheKey, httpRawDataList, 24*time.Hour)
+		x.cache.Set(cacheKey, hrds, 24*time.Hour)
 	}
-	return httpRawDataList, nil
+	return hrds, nil
 }
 
 // getResponse 发送请求获取响应，注意：返回的 *http.Response 将不能再被读取 body

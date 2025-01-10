@@ -61,13 +61,13 @@ func DoFinger(ctx context.Context, webxIns *req.WebX, targetURL string, wfs fing
 	// 自定义请求
 	for _, wf := range wfs.CustomReqs {
 		hrds, err := webxIns.Request(ctx, targetURL, &wf)
-		if err != nil {
-			return fingers.ToSlice(), err
-		}
 		for _, hrd := range hrds {
 			if wf.MatchKeyWord(hrd.Body, finger.HTTPHeadersToMap(hrd.Header), hrd.StatusCode) {
 				fingers.Add(finger.NewWebFingerResult(wf))
 			}
+		}
+		if err != nil {
+			return fingers.ToSlice(), err
 		}
 	}
 	return fingers.ToSlice(), nil
