@@ -167,7 +167,7 @@ func ParseWebFinger(content string) (*WebFingerSystem, error) {
 		} else if wf.IsFavicon() {
 			wfs.Favicons = append(wfs.Favicons, *wf)
 		} else if wf.IsCustom() {
-			wfs.Favicons = append(wfs.CustomReqs, *wf)
+			wfs.CustomReqs = append(wfs.CustomReqs, *wf)
 		}
 	}
 	return wfs, nil
