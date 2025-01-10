@@ -98,12 +98,13 @@ func NewWebX(opt *Options) *WebX {
 // Request 发送请求，wf 为请求指纹，如果传 nil，代表为首页或 favicon 指纹
 func (x *WebX) Request(ctx context.Context, targetURL string, wf *finger.WebFinger) ([]HttpRawData, error) {
 	var v []HttpRawData
+	var cacheKey string
 	if x.cache != nil {
 		d, _ := json.Marshal(map[string]any{
 			"url": targetURL,
 			"finger": wf,
 		})
-		cacheKey := utils.MD5Hex(d)
+		cacheKey = utils.MD5Hex(d)
 		if err := x.cache.Get(cacheKey, &v); err == nil {
 			// 如果有缓存就返回缓存
 			return v, nil
