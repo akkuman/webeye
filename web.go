@@ -59,6 +59,7 @@ func DoFinger(ctx context.Context, webxIns *req.WebX, targetURL string, wfs fing
 		fingers.Append(fingerResult...)
 	}
 	// 自定义请求
+	// 内部实现：自定义请求将不会跟随任何跳转
 	for _, wf := range wfs.CustomReqs {
 		hrds, err := webxIns.Request(ctx, targetURL, &wf)
 		for _, hrd := range hrds {
