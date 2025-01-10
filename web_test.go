@@ -61,13 +61,15 @@ func TestDoFinger(t *testing.T) {
 
 func TestGetWebFinger(t *testing.T) {
 	tests := []struct{
-		targetURL string
+		targetURL []string
 		fingerJSON string
 		want []finger.WebFingerResult
 		err error
 	} {
 		{
-			targetURL: "https://58.210.187.98:4433",
+			targetURL: []string{
+				"https://58.210.187.98:4433",
+			},
 			fingerJSON: `[{
 				"path": "/",
 				"request_method": "get",
@@ -85,22 +87,47 @@ func TestGetWebFinger(t *testing.T) {
 			},
 			err: nil,
 		},
+		{
+			targetURL: []string{
+				"https://fr.mingr.com.cn/",
+				"https://www.dqyjc.org.cn",
+				"http://erp.zschunkai.com:8075/",
+			},
+			fingerJSON: `[{
+				"path": "/",
+				"request_method": "get",
+				"request_headers": {},
+				"request_data": "",
+				"status_code": 0,
+				"headers": {},
+				"keyword": ["name=\"Copyright\" content=\"FineReport\""],
+				"priority": 3,
+				"favicon_hash": [],
+				"name": "finereport"
+			}]`,
+			want: []finger.WebFingerResult{
+				{Name: "finereport", RootPath: "/"},
+			},
+			err: nil,
+		},
 	}
 	for _, tc := range tests {
-		t.Run(fmt.Sprintf("DoFinger(%s)", tc.targetURL), func(t *testing.T) {
-			wfs, err := finger.ParseWebFinger(tc.fingerJSON)
-			if err != nil {
-				t.Error(err)
-				return
-			}
-			got, err := GetWebFinger(context.Background(), tc.targetURL, *wfs)
-			if !utils.ContainsErr(err, tc.err) {
-				t.Errorf("error = %v; want %v", err, tc.err)
-				return
-			}
-			if diff := deep.Equal(got, tc.want); diff != nil {
-				t.Errorf("got %#v; want %#v; diff: %#v", got, tc.want, diff)
-			}
-		})
+		for _, targetURL := range tc.targetURL {
+			t.Run(fmt.Sprintf("DoFinger(%s)", targetURL), func(t *testing.T) {
+				wfs, err := finger.ParseWebFinger(tc.fingerJSON)
+				if err != nil {
+					t.Error(err)
+					return
+				}
+				got, err := GetWebFinger(context.Background(), targetURL, *wfs)
+				if !utils.ContainsErr(err, tc.err) {
+					t.Errorf("error = %v; want %v", err, tc.err)
+					return
+				}
+				if diff := deep.Equal(got, tc.want); diff != nil {
+					t.Errorf("got %#v; want %#v; diff: %#v", got, tc.want, diff)
+				}
+			})
+		}
 	}
 }
