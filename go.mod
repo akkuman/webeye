@@ -9,9 +9,12 @@ require (
 	github.com/deckarep/golang-set/v2 v2.7.0
 	github.com/go-test/deep v1.1.1
 	github.com/imroc/req/v3 v3.49.1
+	github.com/olekukonko/tablewriter v0.0.5
 	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/remeh/sizedwaitgroup v1.0.0
 	github.com/spf13/cast v1.7.1
 	github.com/twmb/murmur3 v1.1.8
+	github.com/urfave/cli/v3 v3.0.0-beta1
 	go.uber.org/ratelimit v0.3.1
 )
 
@@ -25,6 +28,7 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
+	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/onsi/ginkgo/v2 v2.22.0 // indirect
 	github.com/quic-go/qpack v0.5.1 // indirect
 	github.com/quic-go/quic-go v0.48.2 // indirect
