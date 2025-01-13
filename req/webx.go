@@ -146,7 +146,7 @@ func (x *WebX) getResponse(ctx context.Context, rawURL string, wf *finger.WebFin
 			requestMethod = wf.Request.RequestMethod
 		}
 	}
-	resp, err := request.Send(requestMethod, targetURL)
+	resp, err := request.Send(strings.ToUpper(requestMethod), targetURL)
 	if err != nil {
 		return []byte{}, resp, err
 	}
