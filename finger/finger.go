@@ -113,6 +113,11 @@ func (wfr *WebFingerRaw) toWebFinger() (wf *WebFinger, err error) {
 			return
 		}
 	}
+	// 处理 path
+	// "" -> /
+	if wfr.Path == "" {
+		wfr.Path = "/"
+	}
 	// 处理 RootPath
 	rootPath := "/"
 	if wfr.RootPath != "" {
