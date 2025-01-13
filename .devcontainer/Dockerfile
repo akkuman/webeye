@@ -15,4 +15,4 @@ ENV LANG=C.UTF-8 \
     PATH="${HOME}/.local/bin:$PATH"
 
 RUN go env -w GO111MODULE=on && \
-    go env -w GOPROXY=https://goproxy.cn,direct && \
+    go env -w GOPROXY=https://goproxy.cn,direct
