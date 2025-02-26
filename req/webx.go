@@ -90,7 +90,8 @@ func NewWebX(opt *Options) *WebX {
 	} else {
 		x.limiter = ratelimit.NewUnlimited()
 	}
-	x.client = opt.Client
+	x.client = opt.Client.Clone()
+	x.client.SetRedirectPolicy(req.NoRedirectPolicy())
 	x.cache = opt.Cache
 	return x
 }
