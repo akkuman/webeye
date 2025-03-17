@@ -106,6 +106,11 @@ func TestStatusCodeTitle(t *testing.T) {
 			200,
 			"电子资源馆外访问系统",
 		},
+		{
+			"http://113.55.126.44",
+			200,
+			"",
+		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.input, func(t *testing.T) {
