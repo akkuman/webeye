@@ -1,6 +1,7 @@
 package req
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -89,6 +90,54 @@ document.write("Hello World!");
 			got := ExtractRedirectURI(tc.input)
 			if got != tc.want {
 				t.Errorf("got %#v; want %#v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestStatusCodeTitle(t *testing.T) {
+	tests := []struct{
+		input string
+		wantStatusCode int
+		wantTitle string
+	} {
+		{
+			"https://113.55.8.9:8084/",
+			200,
+			"电子资源馆外访问系统",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.input, func(t *testing.T) {
+			httpClient := NewDefaultHTTPClient()
+			webxIns := NewWebX(&Options{MaxRedirects: 4, RateLimit: 1000, Client: httpClient})
+			hrds, err := webxIns.Request(context.Background(), tc.input, nil)
+			if err != nil {
+				t.Error(err)
+				return
+			}
+			if len(hrds) == 0 {
+				t.Error("响应链长度为 0")
+				return
+			}
+			var statusCode int
+			var title string
+			for _, hrd := range hrds {
+				if hrd.StatusCode != 0 {
+					statusCode = hrd.StatusCode
+				}
+				if hrd.Title != "" {
+					title = hrd.Title
+				}
+			}
+			if statusCode != tc.wantStatusCode || title != tc.wantTitle {
+				t.Errorf(
+					"got title:%s status_code:%d; want title:%s status_code:%d",
+					title,
+					statusCode,
+					tc.wantTitle,
+					tc.wantStatusCode,
+				)
 			}
 		})
 	}
