@@ -10,6 +10,8 @@ import (
 	"github.com/spf13/cast"
 )
 
+var allowJSRedirect = true
+
 // 一些提取数据的方法
 var (
 	cutset            = "\n\t\v\f\r"
@@ -52,15 +54,23 @@ func ExtractRedirectURI(data string) (redirectURI string) {
 		return
 	}
 	// 提取 js 跳转
-	for _, r := range reRedirectURLInJS {
-		subMatchMaps := ReSubMatchMap(r, data, -1)
-		// 提取 js 中最后一个跳转链接
-		for _, m := range subMatchMaps {
-			uri, ok := m["uri"]
-			if !ok {
-				continue
+	if allowJSRedirect {
+		for _, r := range reRedirectURLInJS {
+			subMatchMaps := ReSubMatchMap(r, data, -1)
+			// 提取 js 中最后一个跳转链接
+			for _, m := range subMatchMaps {
+				uri, ok := m["uri"]
+				if !ok {
+					continue
+				}
+				redirectPath := strings.TrimSpace(uri)
+				if strings.HasSuffix(redirectPath, "://") {
+					continue
+				} else if strings.Contains(redirectPath, "www.safedog.cn") {
+					continue
+				}
+				redirectURI = redirectPath
 			}
-			redirectURI = strings.TrimSpace(uri)
 		}
 	}
 	return
