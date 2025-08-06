@@ -7,13 +7,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 	"regexp"
 	"slices"
-	"time"
-
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/akkuman/webeye/cache"
@@ -25,6 +26,10 @@ import (
 )
 
 var emialReg = regexp.MustCompile(`(?mi)[A-Za-z0-9.\-+_]+@[a-z0-9.\-+_]+\.[a-z]+`)
+
+// KeyContextScope context 中的 key，代表仅能自动跳转至指定的 host，scope 之外的自动跳转将会禁用
+// 值类型为 []string，可供填入 域名、ip、cidr，其中域名代表它的子域名也将会允许跳转
+var KeyContextScope = "scope:allow_redirect"
 
 type HttpRawData struct {
 	URL         url.URL            //当前 URL
@@ -97,6 +102,7 @@ func NewWebX(opt *Options) *WebX {
 }
 
 // Request 发送请求，wf 为请求指纹，如果传 nil，代表为首页或 favicon 指纹
+// ctx 可以设置键，详情可参见变量 KeyContextScope
 func (x *WebX) Request(ctx context.Context, targetURL string, wf *finger.WebFinger) ([]HttpRawData, error) {
 	var v []HttpRawData
 	var cacheKey string
@@ -167,7 +173,8 @@ func (x *WebX) getResponse(ctx context.Context, rawURL string, wf *finger.WebFin
 }
 
 // 获取跳转 URL
-func (x *WebX) getRedirectURL(http_raw_data HttpRawData) (redirectURL string, is30X bool) {
+// scopeAllowRedirect 允许跳转的 host，仅允许域名、IP、CIDR
+func (x *WebX) getRedirectURL(http_raw_data HttpRawData, scopeAllowRedirect []string) (redirectURL string, is30X bool) {
 	u, _ := url.Parse(http_raw_data.URL.String())
 	// 协议头跳转
 	dnspod := []string{"dnspod.qcloud.com", "www.wendns.com"}
@@ -175,6 +182,9 @@ func (x *WebX) getRedirectURL(http_raw_data HttpRawData) (redirectURL string, is
 	if location == "" {
 		location = http_raw_data.Header.Get("location")
 	}
+	
+	var targetURL *url.URL
+	
 	if location != "" {
 		is30X = true
 		uu, err := u.Parse(location)
@@ -186,19 +196,100 @@ func (x *WebX) getRedirectURL(http_raw_data HttpRawData) (redirectURL string, is
 		if isDnsPod {
 			return
 		}
-		redirectURL = uu.String()
+		targetURL = uu
+	} else {
+		// 非协议头跳转
+		redirectURI := ExtractRedirectURI(string(http_raw_data.Body))
+		if redirectURI != "" {
+			uu, err := u.Parse(redirectURI)
+			if err != nil {
+				return
+			}
+			targetURL = uu
+		}
+	}
+	
+	if targetURL == nil {
 		return
 	}
-	// 非协议头跳转
-	redirectURI := ExtractRedirectURI(string(http_raw_data.Body))
-	if redirectURI != "" {
-		uu, err := u.Parse(redirectURI)
-		if err != nil {
-			return
+	
+	// 如果提供了 scopeAllowRedirect，进行验证
+	if len(scopeAllowRedirect) > 0 {
+		hostname := targetURL.Hostname()
+		if !isHostInScope(hostname, scopeAllowRedirect) {
+			return // 不在允许范围内，不返回 redirectURL
 		}
-		redirectURL = uu.String()
 	}
+	
+	redirectURL = targetURL.String()
 	return
+}
+
+// isHostInScope 检查 hostname 是否在允许的范围内
+func isHostInScope(hostname string, scopeAllowRedirect []string) bool {
+	// 空列表表示允许所有
+	if len(scopeAllowRedirect) == 0 {
+		return true
+	}
+	
+	// 检查是否是 IP 地址
+	if ip := net.ParseIP(hostname); ip != nil {
+		// 是 IP 地址，检查是否在允许的 IP 或 CIDR 范围内
+		for _, scope := range scopeAllowRedirect {
+			if strings.Contains(scope, "/") {
+				// CIDR 格式
+				if prefix, err := netip.ParsePrefix(scope); err == nil {
+					if addr, err := netip.ParseAddr(hostname); err == nil {
+						if prefix.Contains(addr) {
+							return true
+						}
+					}
+				}
+			} else {
+				// 单个 IP
+				if scope == hostname {
+					return true
+				}
+			}
+		}
+		return false
+	}
+	
+	// 是域名，检查域名匹配（包括子域名）
+	for _, scope := range scopeAllowRedirect {
+		if strings.Contains(scope, "/") {
+			continue // 跳过 CIDR 格式，只处理域名
+		}
+		
+		if ip := net.ParseIP(scope); ip != nil {
+			continue // 跳过 IP 地址，只处理域名
+		}
+		
+		// 检查域名匹配
+		if matchDomain(hostname, scope) {
+			return true
+		}
+	}
+	
+	return false
+}
+
+// matchDomain 检查域名是否匹配（支持子域名）
+func matchDomain(hostname, allowedDomain string) bool {
+	hostname = strings.ToLower(strings.TrimSpace(hostname))
+	allowedDomain = strings.ToLower(strings.TrimSpace(allowedDomain))
+	
+	// 精确匹配
+	if hostname == allowedDomain {
+		return true
+	}
+	
+	// 子域名匹配
+	if strings.HasSuffix(hostname, "."+allowedDomain) {
+		return true
+	}
+	
+	return false
 }
 
 // 首页加跳转请求，返回元数据列表，wf 不为 nil，代表是自定义请求
@@ -220,13 +311,17 @@ func (x *WebX) doWebHTMLRequest(ctx context.Context, targetURL string, wf *finge
 	hrd.FaviconHash = x.getFavicon(ctx, httpresp.Response, hrd.Body)
 	HttpRawDataList = append(HttpRawDataList, hrd)
 	currentRedirectCount := 0
+	var scopeAllowRedirectList []string
+	if ctx.Value(KeyContextScope) != nil {
+		scopeAllowRedirectList, _ = ctx.Value(KeyContextScope).([]string)
+	}
 	for {
 		// 计算跳转次数，达到最大值退出
 		currentRedirectCount += 1
 		if currentRedirectCount > x.opt.MaxRedirects {
 			break
 		}
-		redirectURL, _ := x.getRedirectURL(hrd)
+		redirectURL, _ := x.getRedirectURL(hrd, scopeAllowRedirectList)
 		if redirectURL == "" {
 			// 没有更多的跳转
 			break

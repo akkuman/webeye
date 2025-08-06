@@ -45,7 +45,7 @@ func TestWebxGetRedirectURL(t *testing.T) {
 		t.Run(fmt.Sprintf("Webx.getRedirectURL-%s", tc.input.URL.String()), func(t *testing.T) {
 			httpClient := NewDefaultHTTPClient()
 			webxIns := NewWebX(&Options{MaxRedirects: 3, RateLimit: 1000, Client: httpClient})
-			redirectURL, is30X := webxIns.getRedirectURL(tc.input)
+			redirectURL, is30X := webxIns.getRedirectURL(tc.input, nil)
 			if redirectURL != tc.wantRedirectURL || is30X != tc.wantIs30X {
 				t.Errorf("got %#v; want %#v", []any{redirectURL, is30X}, []any{tc.wantRedirectURL, tc.wantIs30X})
 				return
