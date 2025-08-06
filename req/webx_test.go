@@ -113,28 +113,39 @@ func TestStatusCodeTitle(t *testing.T) {
 		input string
 		wantStatusCode int
 		wantTitle string
+		scopeAllowRedirect []string
 	} {
 		{
 			"https://113.55.8.9:8084/",
 			200,
 			"电子资源馆外访问系统",
+			nil,
 		},
 		{
 			"http://113.55.126.44",
 			200,
 			"",
+			nil,
 		},
 		{
-			"https://mlzy.lzszyyy.com",
+			`https://httpbin.org/redirect-to?url=https%3A%2F%2Fwww.qq.com`,
 			200,
+			"腾讯网-QQ.COM",
+			nil,
+		},
+		{
+			`https://httpbin.org/redirect-to?url=https%3A%2F%2Fwww.baidu.com`,
+			302,
 			"",
+			[]string{"httpbin.org"},
 		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.input, func(t *testing.T) {
 			httpClient := NewDefaultHTTPClient()
 			webxIns := NewWebX(&Options{MaxRedirects: 4, RateLimit: 1000, Client: httpClient})
-			hrds, err := webxIns.Request(context.Background(), tc.input, nil)
+			ctx := context.WithValue(context.Background(), KeyContextScope, tc.scopeAllowRedirect)
+			hrds, err := webxIns.Request(ctx, tc.input, nil)
 			if err != nil {
 				t.Error(err)
 				return
