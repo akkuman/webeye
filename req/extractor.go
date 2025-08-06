@@ -19,7 +19,7 @@ var (
 	reFaviconLink     = regexp.MustCompile(`(?im)<\s*?link\s*?rel\s*?=\s*?"\s*?(shortcut icon|icon)\s*?"\s*?href\s*?=\s*?"\s*?(.+?)\s*?"\s*?>`)
 	reRedirectURLInJS = []*regexp.Regexp{
 		regexp.MustCompile(`(?im)\.?location\.(open|replace|assign)\(['"]?(?P<uri>.*?)['"]?\)`),
-		regexp.MustCompile(`(?im)\.?location.*?=\s*?['"](?P<uri>.*?)['"]`),
+		regexp.MustCompile(`(?im)\.?location(?:\.href)?\s*?=\s*?['"](?P<uri>.*?)['"]`),
 	}
 	rePlainWord          = regexp.MustCompile(`^[\p{L}\p{N}\s]+$`)
 	titleGuestKeysInJSON = []string{"msg", "message", "info"}
