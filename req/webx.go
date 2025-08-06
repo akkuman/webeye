@@ -27,9 +27,10 @@ import (
 
 var emialReg = regexp.MustCompile(`(?mi)[A-Za-z0-9.\-+_]+@[a-z0-9.\-+_]+\.[a-z]+`)
 
+type CTXKey string
 // KeyContextScope context 中的 key，代表仅能自动跳转至指定的 host，scope 之外的自动跳转将会禁用
 // 值类型为 []string，可供填入 域名、ip、cidr，其中域名代表它的子域名也将会允许跳转
-var KeyContextScope = "scope:allow_redirect"
+var KeyContextScope CTXKey = "scope:allow_redirect"
 
 type HttpRawData struct {
 	URL         url.URL            //当前 URL
