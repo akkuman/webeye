@@ -55,9 +55,9 @@ func ExtractRedirectURI(data string) (redirectURI string) {
 	}
 	// 提取 js 跳转
 	if allowJSRedirect {
+		var redirectPaths []string
 		for _, r := range reRedirectURLInJS {
 			subMatchMaps := ReSubMatchMap(r, data, -1)
-			// 提取 js 中最后一个跳转链接
 			for _, m := range subMatchMaps {
 				uri, ok := m["uri"]
 				if !ok {
@@ -69,9 +69,14 @@ func ExtractRedirectURI(data string) (redirectURI string) {
 				} else if strings.Contains(redirectPath, "www.safedog.cn") {
 					continue
 				}
-				redirectURI = redirectPath
+				redirectPaths = append(redirectPaths, redirectPath)
 			}
 		}
+		if len(redirectPaths) != 1 {
+			// 如果跳转路径超过一个，大多数情况下代表不是自动跳转
+			return
+		}
+		redirectURI = redirectPaths[0]
 	}
 	return
 }

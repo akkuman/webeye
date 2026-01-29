@@ -116,12 +116,6 @@ func TestStatusCodeTitle(t *testing.T) {
 		scopeAllowRedirect []string
 	} {
 		{
-			"https://113.55.8.9:8084/",
-			200,
-			"电子资源馆外访问系统",
-			nil,
-		},
-		{
 			"http://113.55.126.44",
 			200,
 			"",
@@ -138,6 +132,18 @@ func TestStatusCodeTitle(t *testing.T) {
 			302,
 			"",
 			[]string{"httpbin.org"},
+		},
+		{
+			`http://60.191.20.68/`,
+			200,
+			"浙江省中医院人才招聘",
+			nil,
+		},
+		{
+			"http://210.42.177.131/",
+			200,
+			"医学教育实习管理系统",
+			nil,
 		},
 	}
 	for _, tc := range tests {
